@@ -9,7 +9,7 @@
     const [todayCompleted, setTodayCompleted] = useState(false);
     const [showDebug, setShowDebug] = useState(false);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA')
 
     useEffect(() => {
       loadData();
@@ -55,7 +55,8 @@
     };
 
     const formatDate = (dateString) => {
-      const date = new Date(dateString);
+      const [year, month, day] = dateString.split('-');
+      const date = new Date(year, month - 1, day); // month is 0-indexed here
       const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       return `${dayNames[date.getDay()]} ${date.getMonth() + 1}/${date.getDate()}`;
     };
