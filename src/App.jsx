@@ -1,5 +1,6 @@
-  import { useState, useEffect } from 'react'
+  import { useState, useEffect, useRef } from 'react'
   import { Moon, Calendar, Bug, X } from 'lucide-react';
+  import * as d3 from 'd3';
   import './App.css'
 
   function App() {
@@ -8,12 +9,19 @@
     const [history, setHistory] = useState([]);
     const [todayCompleted, setTodayCompleted] = useState(false);
     const [showDebug, setShowDebug] = useState(false);
+    const chartRef = useRef(null);
 
     const today = new Date().toLocaleDateString('en-CA')
 
     useEffect(() => {
       loadData();
     }, []);
+
+    useEffect(() => {
+      if (todayCompleted && history.length > 0) {
+        drawChart();
+      }
+    }, [todayCompleted, history]);
 
     const loadData = () => {
       // Load all check-ins from localStorage
@@ -52,6 +60,95 @@
 
     const getLast7Days = () => {
       return history.slice(0, 7);
+    };
+
+    const drawChart = () => {
+      if (!chartRef.current) return;
+
+      const data = getLast7Days().reverse();
+      if (data.length === 0) return;
+
+      // Clear previous chart
+      d3.select(chartRef.current).selectAll('*').remove();
+
+      const margin = 20;
+      const width = 600 - (2 * margin);
+      const height = 300 - (2 * margin);
+
+      const svg = d3.select(chartRef.current)
+        .append('svg')
+        .attr('width', width + (2 * margin))
+        .attr('height', height + (2 * margin))
+        .append('g')
+        .attr('transform', `translate(${margin},${margin})`);
+
+      // X scale
+      const x = d3.scaleBand()
+        .domain(data.map(d => d.date))
+        .range([0, width-(2*margin)])
+        .padding(0.2);
+
+      // Y scale
+      const y = d3.scaleLinear()
+        .domain([0, 100])
+        .range([height-(2*margin), 0]);
+
+      // Bars
+      svg.selectAll('.bar')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('class', 'bar')
+        .attr('x', d => x(d.date))
+        .attr('y', d => y(d.score))
+        .attr('width', x.bandwidth())
+        .attr('height', d => height - y(d.score))
+        .attr('fill', '#3b82f6');
+
+      // Day labels inside bars
+      svg.selectAll('.day-label')
+        .data(data)
+        .enter()
+        .append('text')
+        .attr('class', 'label')
+        .attr('x', d => x(d.date) + x.bandwidth() / 2)
+        .attr('y', d => height - 10)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .style('font-size', '14px')
+        .style('font-weight', 'bold')
+        .text(d => {
+          const [year, month, day] = d.date.split('-');
+          const date = new Date(year, month - 1, day);
+          const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          return dayNames[date.getDay()];
+        });
+
+      // Score inside bar
+      svg.selectAll('.score-label')
+        .data(data)
+        .enter()
+        .append('text')
+        .attr('class', 'label')
+        .attr('x', d => x(d.date) + x.bandwidth() / 2)
+        .attr('y', d => y(d.score) + 20)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .style('font-size', '14px')
+        .style('font-weight', 'bold')
+        .text(d => {
+          return d.score;
+        });
+
+      // Red line at 70
+      svg.append('line')
+        .attr('x1', 0)
+        .attr('x2', width-(2*margin))
+        .attr('y1', y(70))
+        .attr('y2', y(70))
+        .attr('stroke', 'darkred')
+        .attr('stroke-width', 2)
+        .attr('opacity', 0.5)
     };
 
     const formatDate = (dateString) => {
@@ -120,20 +217,7 @@
             {getLast7Days().length === 0 ? (
               <p className="text-gray-600">No history yet. This is your first check-in!</p>
             ) : (
-              <div className="space-y-3">
-                {getLast7Days().map(entry => (
-                  <div key={entry.date} className="flex items-center justify-between p-4 bg-gray-50 rounded">
-                    <div>
-                      <div className="font-medium">{formatDate(entry.date)}</div>
-                      <div className="text-sm text-gray-600">{entry.date}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg">{entry.hours} hrs</div>
-                      <div className="text-sm text-gray-600">score: {entry.score}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <div ref={chartRef} className="flex justify-center"></div>
             )}
 
             <div className="mt-6 p-4 bg-blue-50 rounded">
