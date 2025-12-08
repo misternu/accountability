@@ -283,14 +283,15 @@
             <h1 className="text-2xl font-bold">Morning Check-in</h1>
           </div>
 
-          <div className="space-y-6">
+          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); if (sleepHours && sleepScore) submitCheckin(); }}>
             <div>
               <label className="block text-sm font-medium mb-2">
                 Hours of sleep last night
               </label>
               <input
                 type="number"
-                step="0.5"
+                step="any"
+                min="0"
                 value={sleepHours}
                 onChange={(e) => setSleepHours(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -304,22 +305,24 @@
               </label>
               <input
                 type="number"
-                step="0.5"
+                step="1"
+                min="1"
+                max="100"
                 value={sleepScore}
                 onChange={(e) => setSleepScore(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="7.5"
+                placeholder="85"
               />
             </div>
 
             <button
-              onClick={submitCheckin}
-              disabled={!sleepHours}
+              type="submit"
+              disabled={!sleepHours || !sleepScore}
               className="w-full py-3 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
               Submit Check-in
             </button>
-          </div>
+          </form>
         </div>
       </div>
     );

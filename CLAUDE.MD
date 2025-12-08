@@ -28,13 +28,16 @@ A React-based sleep tracking application that helps users log and visualize thei
 - Users log sleep hours and sleep score each morning
 - One check-in per day (prevents duplicate entries for same date)
 - Form validation ensures required fields are filled
+- Enter key submits form when both fields are filled
+- Input constraints: hours >= 0 (any decimal), score 1-100 (whole numbers)
 - Data persists in browser localStorage
 
 ### Data Visualization
-- Bar chart showing last 7 days of sleep scores using D3.js
+- Bar chart showing last 7 calendar days using D3.js
+- Always displays 7 bars: blue for days with data, gray placeholder for missed days
 - Horizontal red line at score of 70 as reference threshold
-- Day-of-week labels (Mon, Tue, etc.) displayed on bars
-- Actual scores displayed inside each bar
+- Day-of-week labels (Mon, Tue, etc.) displayed below bars
+- Actual scores displayed inside bars (only for days with data)
 
 ### Data Management
 - All sleep history stored in localStorage as JSON
@@ -53,7 +56,7 @@ A React-based sleep tracking application that helps users log and visualize thei
 {
   date: "2025-12-07",           // ISO date string (YYYY-MM-DD)
   hours: 7.5,                   // Float: hours of sleep
-  score: 85,                    // Integer: sleep quality score
+  score: 85,                    // Integer 1-100: sleep quality score
   timestamp: "2025-12-07T10:30:00Z"  // ISO timestamp of check-in
 }
 ```
@@ -78,11 +81,13 @@ Main component managing all application state and logic:
 - `history` - Array of all sleep entries
 - `todayCompleted` - Boolean tracking if today's check-in is done
 - `showDebug` - Boolean controlling debug modal visibility
+- `showDeleteConfirm` - Boolean for delete confirmation dialog
 
 **Key Functions:**
 - `loadData()` - Loads history from localStorage on mount
 - `submitCheckin()` - Saves new entry and updates state
-- `getLast7Days()` - Returns 7 most recent entries
+- `getLast7Days()` - Returns array of last 7 calendar days (with null values for missing days)
+- `deleteAllData()` - Clears all history from localStorage and resets state
 - `drawChart()` - Renders D3 bar chart
 - `formatDate()` - Converts YYYY-MM-DD to "Day M/D" format
 
@@ -108,6 +113,7 @@ Main component managing all application state and logic:
 ## Debug Tools
 - Bug icon button in header reveals debug modal
 - Modal displays raw JSON of entire sleep history
+- Delete All Data button with confirmation dialog to clear history
 - Useful for inspecting data structure and troubleshooting
 
 ## Known Constraints
@@ -121,4 +127,4 @@ Main component managing all application state and logic:
 - Uses React hooks (useState, useEffect, useRef)
 - D3 chart uses imperative DOM manipulation via ref
 - Tailwind classes for all styling
-- Form inputs accept decimal values (step="0.5")
+- Hours input accepts any decimal (step="any"), score input accepts whole numbers (step="1")
