@@ -59,14 +59,22 @@
     };
 
     const getLast7Days = () => {
-      return history.slice(0, 7);
+      // Generate the last 7 calendar days
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toLocaleDateString('en-CA');
+        const entry = history.find(h => h.date === dateStr);
+        days.push(entry || { date: dateStr, hours: null, score: null });
+      }
+      return days;
     };
 
     const drawChart = () => {
       if (!chartRef.current) return;
 
-      const data = getLast7Days().reverse();
-      if (data.length === 0) return;
+      const data = getLast7Days();
 
       // Clear previous chart
       d3.select(chartRef.current).selectAll('*').remove();
@@ -100,22 +108,22 @@
         .append('rect')
         .attr('class', 'bar')
         .attr('x', d => x(d.date))
-        .attr('y', d => y(d.score))
+        .attr('y', d => y(d.score ?? 0))
         .attr('width', x.bandwidth())
-        .attr('height', d => height - y(d.score))
-        .attr('fill', '#3b82f6');
+        .attr('height', d => height-(2*margin) - y(d.score ?? 0))
+        .attr('fill', d => d.score !== null ? '#3b82f6' : '#e5e7eb');
 
-      // Day labels inside bars
+      // Day labels below bars
       svg.selectAll('.day-label')
         .data(data)
         .enter()
         .append('text')
         .attr('class', 'label')
         .attr('x', d => x(d.date) + x.bandwidth() / 2)
-        .attr('y', d => height - 10)
+        .attr('y', height-(2*margin) + 15)
         .attr('text-anchor', 'middle')
-        .attr('fill', 'white')
-        .style('font-size', '14px')
+        .attr('fill', '#374151')
+        .style('font-size', '12px')
         .style('font-weight', 'bold')
         .text(d => {
           const [year, month, day] = d.date.split('-');
@@ -124,9 +132,9 @@
           return dayNames[date.getDay()];
         });
 
-      // Score inside bar
+      // Score inside bar (only for days with data)
       svg.selectAll('.score-label')
-        .data(data)
+        .data(data.filter(d => d.score !== null))
         .enter()
         .append('text')
         .attr('class', 'label')
@@ -136,9 +144,7 @@
         .attr('fill', 'white')
         .style('font-size', '14px')
         .style('font-weight', 'bold')
-        .text(d => {
-          return d.score;
-        });
+        .text(d => d.score);
 
       // Red line at 70
       svg.append('line')
