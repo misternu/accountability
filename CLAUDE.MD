@@ -15,11 +15,16 @@ A React-based sleep tracking application that helps users log and visualize thei
 ```
 /
 ├── src/
-│   ├── App.jsx          # Main application component
-│   ├── main.jsx         # Application entry point
-│   └── App.css          # Component styles
-├── package.json         # Dependencies and scripts
-└── vite.config.js       # Vite configuration
+│   ├── App.jsx              # Main component (state, logic, view routing)
+│   ├── main.jsx             # Application entry point
+│   ├── App.css              # Component styles
+│   └── components/
+│       ├── CheckinForm.jsx  # Morning check-in form UI
+│       ├── CompletedView.jsx# Post-checkin view with chart
+│       ├── DebugModal.jsx   # Debug modal with delete functionality
+│       └── HistoryChart.jsx # Chart container for D3
+├── package.json             # Dependencies and scripts
+└── vite.config.js           # Vite configuration
 ```
 
 ## Key Features
@@ -73,7 +78,7 @@ A React-based sleep tracking application that helps users log and visualize thei
 ## Component Architecture
 
 ### App.jsx
-Main component managing all application state and logic:
+Main component managing all application state and logic. Routes between CheckinForm and CompletedView based on `todayCompleted` state.
 
 **State Variables:**
 - `sleepHours` - Current input for hours
@@ -89,7 +94,18 @@ Main component managing all application state and logic:
 - `getLast7Days()` - Returns array of last 7 calendar days (with null values for missing days)
 - `deleteAllData()` - Clears all history from localStorage and resets state
 - `drawChart()` - Renders D3 bar chart
-- `formatDate()` - Converts YYYY-MM-DD to "Day M/D" format
+
+### components/CheckinForm.jsx
+Morning check-in form with hours and score inputs. Handles form submission with Enter key support.
+
+### components/CompletedView.jsx
+Displays after check-in is complete. Shows today's stats, the history chart, and debug button. Composes DebugModal and HistoryChart.
+
+### components/DebugModal.jsx
+Modal overlay showing raw JSON history data. Includes delete all data button with confirmation dialog.
+
+### components/HistoryChart.jsx
+Simple container div that receives the chartRef for D3 to render into.
 
 ## Important Implementation Details
 
